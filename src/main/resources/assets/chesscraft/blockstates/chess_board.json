@@ -1,0 +1,115 @@
+{
+  "variants": {
+    "facing=north,part=0": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=north,part=1": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=north,part=2": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=north,part=3": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=north,part=4": {
+      "model": "chesscraft:block/chess_board"
+    },
+    "facing=north,part=5": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=north,part=6": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=north,part=7": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=north,part=8": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=east,part=0": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=east,part=1": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=east,part=2": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=east,part=3": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=east,part=4": {
+      "model": "chesscraft:block/chess_board",
+      "y": 90
+    },
+    "facing=east,part=5": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=east,part=6": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=east,part=7": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=east,part=8": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=south,part=0": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=south,part=1": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=south,part=2": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=south,part=3": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=south,part=4": {
+      "model": "chesscraft:block/chess_board",
+      "y": 180
+    },
+    "facing=south,part=5": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=south,part=6": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=south,part=7": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=south,part=8": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=west,part=0": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=west,part=1": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=west,part=2": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=west,part=3": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=west,part=4": {
+      "model": "chesscraft:block/chess_board",
+      "y": 270
+    },
+    "facing=west,part=5": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=west,part=6": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=west,part=7": {
+      "model": "chesscraft:block/chess_board_part"
+    },
+    "facing=west,part=8": {
+      "model": "chesscraft:block/chess_board_part"
+    }
+  }
+}

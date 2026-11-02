@@ -1,0 +1,17 @@
+{
+  "block.chesscraft.chess_table_base": "Chess Table Base",
+  "block.chesscraft.chess_board": "Chess Board",
+  "itemGroup.chesscraft": "ChessCraft",
+  "block.chesscraft.white_pawn": "White Pawn",
+  "block.chesscraft.white_knight": "White Knight",
+  "block.chesscraft.white_bishop": "White Bishop",
+  "block.chesscraft.white_rook": "White Rook",
+  "block.chesscraft.white_queen": "White Queen",
+  "block.chesscraft.white_king": "White King",
+  "block.chesscraft.black_pawn": "Black Pawn",
+  "block.chesscraft.black_knight": "Black Knight",
+  "block.chesscraft.black_bishop": "Black Bishop",
+  "block.chesscraft.black_rook": "Black Rook",
+  "block.chesscraft.black_queen": "Black Queen",
+  "block.chesscraft.black_king": "Black King"
+}

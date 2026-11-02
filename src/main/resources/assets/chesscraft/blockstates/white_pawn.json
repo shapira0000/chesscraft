@@ -1,0 +1,64 @@
+{
+  "variants": {
+    "rotation=0": {
+      "model": "chesscraft:block/white_pawn"
+    },
+    "rotation=1": {
+      "model": "chesscraft:block/white_pawn_r1"
+    },
+    "rotation=2": {
+      "model": "chesscraft:block/white_pawn_r2"
+    },
+    "rotation=3": {
+      "model": "chesscraft:block/white_pawn_r3"
+    },
+    "rotation=4": {
+      "model": "chesscraft:block/white_pawn",
+      "y": 90
+    },
+    "rotation=5": {
+      "model": "chesscraft:block/white_pawn_r1",
+      "y": 90
+    },
+    "rotation=6": {
+      "model": "chesscraft:block/white_pawn_r2",
+      "y": 90
+    },
+    "rotation=7": {
+      "model": "chesscraft:block/white_pawn_r3",
+      "y": 90
+    },
+    "rotation=8": {
+      "model": "chesscraft:block/white_pawn",
+      "y": 180
+    },
+    "rotation=9": {
+      "model": "chesscraft:block/white_pawn_r1",
+      "y": 180
+    },
+    "rotation=10": {
+      "model": "chesscraft:block/white_pawn_r2",
+      "y": 180
+    },
+    "rotation=11": {
+      "model": "chesscraft:block/white_pawn_r3",
+      "y": 180
+    },
+    "rotation=12": {
+      "model": "chesscraft:block/white_pawn",
+      "y": 270
+    },
+    "rotation=13": {
+      "model": "chesscraft:block/white_pawn_r1",
+      "y": 270
+    },
+    "rotation=14": {
+      "model": "chesscraft:block/white_pawn_r2",
+      "y": 270
+    },
+    "rotation=15": {
+      "model": "chesscraft:block/white_pawn_r3",
+      "y": 270
+    }
+  }
+}

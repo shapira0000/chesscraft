@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SSS",
+    " L ",
+    "PPP"
+  ],
+  "key": {
+    "S": "#minecraft:wooden_slabs",
+    "L": "#minecraft:logs",
+    "P": "#minecraft:planks"
+  },
+  "result": {
+    "id": "chesscraft:chess_table_base",
+    "count": 1
+  }
+}

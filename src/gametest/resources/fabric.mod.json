@@ -1,0 +1,13 @@
+{
+	"schemaVersion": 1,
+	"id": "chesscraft-gametest",
+	"version": "1.0.0",
+	"name": "ChessCraft Game Tests",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-client-gametest": ["com.yossi.chesscraft.gametest.ChessClientGameTest"]
+	},
+	"depends": {
+		"chesscraft": "*"
+	}
+}

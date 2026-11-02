@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "chesscraft:block/chess_table_base"
+    }
+  }
+}

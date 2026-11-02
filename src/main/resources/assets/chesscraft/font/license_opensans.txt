@@ -1,0 +1,3 @@
+Open Sans (opensans-regular.ttf, opensans-bold.ttf)
+Copyright 2010-2011 Google Corporation.
+Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0

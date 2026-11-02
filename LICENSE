@@ -1,0 +1,13 @@
+ChessCraft - CC0 1.0 Universal (Public Domain Dedication)
+
+To the extent possible under law, the author has waived all copyright and related or
+neighboring rights to ChessCraft (its source code, models, textures and other assets).
+You may copy, modify, distribute and use it, even commercially and without credit,
+all without asking permission.
+
+Full legal text: https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+Exception: the Open Sans font files in src/main/resources/assets/chesscraft/font/
+are not covered by this dedication. They are Copyright 2010-2011 Google Corporation and
+licensed under the Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0).
+Keep src/main/resources/assets/chesscraft/font/license_opensans.txt when redistributing them.
