@@ -1,0 +1,87 @@
+// Common build for the Fabric ports on Minecraft 26.x (unobfuscated: no mappings, no remapping).
+// The port's build.gradle applies the net.fabricmc.fabric-loom plugin first.
+
+version = project.mod_version
+group = 'com.yossi.chesscraft'
+base {
+	archivesName = "chesscraft-fabric-${project.chess_label}"
+}
+
+apply from: '../../sources.gradle'
+
+loom {
+	runs {
+		client {
+			programArgs '--username', 'ChessDev'
+		}
+	}
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+processResources {
+	def props = [version: project.mod_version, minecraft_range: project.minecraft_range, java_version: '25']
+	inputs.properties props
+	filesMatching('fabric.mod.json') {
+		expand props
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 25
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
+}
+
+// The client game test from src/gametest, preprocessed like the main source (run: gradlew runClientGameTest).
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = 'chesscraft-gametest'
+		enableGameTests = false
+		enableClientGameTests = true
+		eula = true
+	}
+}
+
+def gametestJava = layout.buildDirectory.dir('chess-src/gametest/java')
+def prepareGametest = tasks.register('prepareChessGametest', Copy) {
+	from(new File(rootDir, '../../../src/gametest/java'))
+	into gametestJava
+	inputs.property('mc', project.minecraft_version)
+	doFirst { delete gametestJava }
+	doLast {
+		def rules = []
+		project.chess_versions.split(',').each { v ->
+			def f = new File(rootDir, "../../../versions/${v.trim()}/renames.txt")
+			if (!f.isFile()) return
+			f.eachLine('UTF-8') { line ->
+				def t = line.trim()
+				if (!t || t.startsWith('#')) return
+				def parts = t.split(/\s+=>\s+/, 2)
+				rules << [java.util.regex.Pattern.compile(parts[0]), parts.length > 1 ? parts[1] : '']
+			}
+		}
+		gametestJava.get().asFile.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+			def out = chessPreprocess(f.getText('UTF-8'), project.minecraft_version, 'fabric', f.path)
+			rules.each { rule -> out = rule[0].matcher(out).replaceAll(rule[1]) }
+			f.setText(out, 'UTF-8')
+		}
+	}
+}
+sourceSets.gametest.java.srcDirs = [gametestJava]
+sourceSets.gametest.resources.srcDirs = [new File(rootDir, '../../../src/gametest/resources')]
+tasks.named('compileGametestJava') { dependsOn prepareGametest }
+
+afterEvaluate {
+	loom.runs.matching { it.name == 'clientGameTest' }.configureEach {
+		vmArg '-Dfabric.client.gametest.disableNetworkSynchronizer=true'
+	}
+}

@@ -42,3 +42,10 @@ replay_*.log
 # python
 __pycache__/
 *.pyc
+
+# multi-loader ports
+smoketest.log
+# release jars (built by build-final-mods.ps1)
+final-mods/
+# smoke-test world (copied from the Fabric client game test save)
+ports/testworld/

@@ -1,0 +1,79 @@
+// Version/loader preprocessor for the shared Java source (see ports/sources.gradle for the syntax).
+// Inactive lines become empty lines so compiler line numbers still match the shared source.
+
+def compareVersions = { String a, String b ->
+	def pa = a.tokenize('.').collect { it as int }
+	def pb = b.tokenize('.').collect { it as int }
+	for (int i = 0; i < Math.max(pa.size(), pb.size()); i++) {
+		int x = i < pa.size() ? pa[i] : 0
+		int y = i < pb.size() ? pb[i] : 0
+		if (x != y) return x <=> y
+	}
+	return 0
+}
+
+def evalAtom
+evalAtom = { String atom, String mc, String loader, String where ->
+	atom = atom.trim()
+	if (atom.startsWith('!')) return !evalAtom(atom.substring(1), mc, loader, where)
+	if (atom in ['fabric', 'neoforge', 'forge']) return atom == loader
+	def m = atom =~ /^mc\s*(>=|<=|==|!=|>|<)\s*([0-9.]+)$/
+	if (!m.matches()) throw new GradleException("Bad preprocessor condition '${atom}' in ${where}")
+	int c = compareVersions(mc, m.group(2))
+	switch (m.group(1)) {
+		case '>=': return c >= 0
+		case '<=': return c <= 0
+		case '>': return c > 0
+		case '<': return c < 0
+		case '==': return c == 0
+		default: return c != 0
+	}
+}
+
+def evalCondition = { String expr, String mc, String loader, String where ->
+	expr.split(/\|\|/).any { ors -> ors.split(/&&/).every { evalAtom(it, mc, loader, where) } }
+}
+
+ext.chessPreprocess = { String text, String mc, String loader, String where ->
+	def out = new StringBuilder()
+	def stack = []   // each: [active, anyTaken, parentActive]
+	def lineNo = 0
+	text.eachLine { line ->
+		lineNo++
+		def t = line.trim()
+		def here = "${where}:${lineNo}"
+		boolean parentActive = stack.every { it[0] }
+		if (t.startsWith('//#if ')) {
+			boolean cond = evalCondition(t.substring(6), mc, loader, here)
+			stack << [cond, cond, parentActive]
+			out << '\n'
+		} else if (t.startsWith('//#elif ')) {
+			if (!stack) throw new GradleException("//#elif without //#if at ${here}")
+			def top = stack[-1]
+			boolean cond = !top[1] && evalCondition(t.substring(8), mc, loader, here)
+			top[0] = cond
+			top[1] = top[1] || cond
+			out << '\n'
+		} else if (t == '//#else') {
+			if (!stack) throw new GradleException("//#else without //#if at ${here}")
+			def top = stack[-1]
+			top[0] = !top[1]
+			top[1] = true
+			out << '\n'
+		} else if (t == '//#endif') {
+			if (!stack) throw new GradleException("//#endif without //#if at ${here}")
+			stack.removeLast()
+			out << '\n'
+		} else if (!stack) {
+			out << line << '\n'
+		} else if (stack.every { it[0] }) {
+			// Active line: uncomment "//$" lines.
+			def m = line =~ /^(\s*)\/\/\$ ?(.*)$/
+			out << (m.matches() ? m.group(1) + m.group(2) : line) << '\n'
+		} else {
+			out << '\n'
+		}
+	}
+	if (stack) throw new GradleException("Unclosed //#if in ${where}")
+	return out.toString()
+}

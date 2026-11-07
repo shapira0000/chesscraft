@@ -1,8 +1,10 @@
 package com.yossi.chesscraft.block;
 
+//#if mc<26.3
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+//#endif
 import com.yossi.chesscraft.chess.Piece;
 import com.yossi.chesscraft.registry.ModBlocks;
 import net.minecraft.core.BlockPos;
@@ -22,10 +24,12 @@ import org.jspecify.annotations.Nullable;
 
 /** A decorative chess piece that can stand in the world facing any of 16 directions. */
 public class ChessPieceBlock extends Block {
+//#if mc<26.3
 	public static final MapCodec<ChessPieceBlock> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
 			Codec.INT.fieldOf("piece").forGetter(ChessPieceBlock::piece),
 			propertiesCodec()
 	).apply(i, ChessPieceBlock::new));
+//#endif
 
 	public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
 
@@ -47,10 +51,12 @@ public class ChessPieceBlock extends Block {
 		return piece;
 	}
 
+//#if mc<26.3
 	@Override
 	protected MapCodec<? extends Block> codec() {
 		return CODEC;
 	}
+//#endif
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {

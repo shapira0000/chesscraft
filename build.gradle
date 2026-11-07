@@ -80,3 +80,10 @@ java {
 	sourceCompatibility = JavaVersion.VERSION_21
 	targetCompatibility = JavaVersion.VERSION_21
 }
+
+// The license travels with the jar.
+jar {
+	from('LICENSE') {
+		rename { 'LICENSE_chesscraft.txt' }
+	}
+}

@@ -1,0 +1,45 @@
+// Common build for the NeoForge ports (ModDevGradle). The port's build.gradle applies the plugin first.
+version = project.mod_version
+group = 'com.yossi.chesscraft'
+base {
+	archivesName = "chesscraft-neoforge-${project.chess_label}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(project.java_version as int)
+
+apply from: '../../sources.gradle'
+
+neoForge {
+	version = project.neo_version
+	runs {
+		client {
+			client()
+			programArguments.addAll '--username', 'ChessDev'
+			if ((project.findProperty('chess_smoketest') ?: 'false') == 'true') {
+				programArguments.addAll '--quickPlaySingleplayer', 'ChessSmoke'
+			}
+		}
+		server {
+			server()
+			programArgument '--nogui'
+		}
+	}
+	mods {
+		chesscraft {
+			sourceSet(sourceSets.main)
+		}
+	}
+}
+
+processResources {
+	// Any NeoForge build for this Minecraft version: 26.2.0.93 -> 26.2.0, 21.11.48 -> 21.11.0
+	def parts = (project.neo_version as String).tokenize('.')
+	def neoMin = parts.size() >= 4 ? parts[0..2].join('.') : parts[0..1].join('.') + '.0'
+	def props = [version: project.mod_version, minecraft_range: project.minecraft_range, neo_version: neoMin,
+			// 26.x renamed logoFile to iconFile (square icons).
+			icon_key: (project.minecraft_version as String).startsWith('1.') ? 'logoFile' : 'iconFile']
+	inputs.properties props
+	filesMatching('META-INF/neoforge.mods.toml') {
+		expand props
+	}
+}

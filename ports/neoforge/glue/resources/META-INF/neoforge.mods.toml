@@ -1,0 +1,27 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "CC0-1.0 (Open Sans font: Apache-2.0)"
+issueTrackerURL = "https://github.com/shapira0000/chesscraft/issues"
+
+[[mods]]
+modId = "chesscraft"
+version = "${version}"
+displayName = "ChessCraft"
+${icon_key} = "assets/chesscraft/icon.png"
+authors = "yossi"
+displayURL = "https://github.com/shapira0000/chesscraft"
+description = '''A complete chess system: a table base, a 3x3 live chess board, twelve placeable chess pieces, full FIDE rules and a built-in chess engine from 100 to 3200 Elo.'''
+
+[[dependencies.chesscraft]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neo_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.chesscraft]]
+modId = "minecraft"
+type = "required"
+versionRange = "${minecraft_range}"
+ordering = "NONE"
+side = "BOTH"

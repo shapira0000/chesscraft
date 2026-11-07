@@ -1,8 +1,18 @@
-# ChessCraft (Fabric 1.21.11)
+# ChessCraft
 
 A complete chess system for Minecraft: a table base, a 3x3 chess board that shows the game live in the
 world, twelve placeable chess pieces, full FIDE rules, a built-in chess engine from 100 to 3200 Elo,
 and a chess-site style screen with post-game review.
+
+## Downloads
+
+| Loader | Minecraft versions |
+|---|---|
+| Fabric (needs Fabric API) | 1.21.11, 26.1 (26.1 - 26.1.2), 26.2, 26.3 |
+| NeoForge | 1.21.11, 26.1.2, 26.2, 26.3 |
+| Forge | 1.21.11, 26.1.2, 26.2, 26.3 |
+
+The mod is needed on both the client and the server.
 
 ## Blocks (14)
 
@@ -48,13 +58,35 @@ growing time budget. Elo labels are approximate. Reviews run on the player's own
 ## Development
 
 ```
-gradlew build              # compile + unit tests (perft, rules, engine, review)
+gradlew build              # Fabric 1.21.11: compile + unit tests (perft, rules, engine, review)
 gradlew runClientGameTest  # end-to-end test in a real client, screenshots in build/run/clientGameTest/screenshots
 gradlew runClient          # play in a dev client
 python tools/gen_assets.py # regenerate textures, models, blockstates, loot tables, GUI sprites and icons
+powershell -ExecutionPolicy Bypass -File build-final-mods.ps1   # build all 12 release jars into final-mods/
 ```
 
-The built mod is `build/libs/chesscraft-1.0.0.jar` (requires Fabric Loader and Fabric API).
+### Layout
+
+- `src/` - the one shared source (chess core, engine, blocks, renderer, screen). The root project builds it for
+  Fabric 1.21.11.
+- `ports/<loader>/<version>/` - a small Gradle project per loader and Minecraft version (settings only, generated
+  by `python ports/make_ports.py`). `ports/sources.gradle` assembles each port from layers: the port itself,
+  `ports/<loader>/glue/` (entry points, registration, networking), `versions/<v>/` and the shared `src/`.
+- Version differences live in the shared source as preprocessor blocks, resolved per port at build time:
+
+  ```java
+  //#if mc>=26.3
+  //$	pose.rotate(Axis.YP.rotationDegrees(-st.yaw));
+  //#else
+  	pose.mulPose(Axis.YP.rotationDegrees(-st.yaw));
+  //#endif
+  ```
+
+  Conditions: `mc <op> version`, `fabric`, `neoforge`, `forge`, `!`, `&&`, `||`. Whole-version renames are in
+  `versions/<v>/renames.txt`.
+- Testing: Fabric ports run the same client game test (`gradlew runClientGameTest` inside the port). NeoForge and
+  Forge ports run a development-only in-game smoke test: `bash ports/smoketest.sh <loader> <version>`.
+- `final-mods/<Loader>/` - the release jars.
 
 ## License
 

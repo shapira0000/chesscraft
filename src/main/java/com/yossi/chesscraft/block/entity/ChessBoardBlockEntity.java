@@ -42,6 +42,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import org.jspecify.annotations.Nullable;
@@ -297,7 +298,7 @@ public class ChessBoardBlockEntity extends BlockEntity {
 	private static void give(ServerPlayer player, int piece, int count) {
 		if (count <= 0) return;
 		ItemStack stack = new ItemStack(ModBlocks.PIECE_ITEMS[piece], count);
-		if (!player.getInventory().add(stack)) player.drop(stack, false);
+		ChessCraft.give(player, stack);
 	}
 
 	@Override
@@ -905,7 +906,7 @@ public class ChessBoardBlockEntity extends BlockEntity {
 	// =================================================================== helpers
 
 	private void tell(ServerPlayer player, String msg, ChatFormatting color) {
-		player.displayClientMessage(Component.literal(msg).withStyle(color), true);
+		ChessCraft.actionBar(player, Component.literal(msg).withStyle(color));
 	}
 
 	/** Chat message to every player within 16 blocks of the board. */
@@ -914,7 +915,7 @@ public class ChessBoardBlockEntity extends BlockEntity {
 		Component c = Component.literal("[Chess] ").withStyle(ChatFormatting.GOLD)
 				.append(Component.literal(msg).withStyle(ChatFormatting.WHITE));
 		for (ServerPlayer p : sl.players()) {
-			if (p.distanceToSqr(worldPosition.getCenter()) < 16 * 16) p.sendSystemMessage(c);
+			if (p.distanceToSqr(Vec3.atCenterOf(worldPosition)) < 16 * 16) p.sendSystemMessage(c);
 		}
 	}
 

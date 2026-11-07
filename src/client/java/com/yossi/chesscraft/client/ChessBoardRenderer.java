@@ -8,6 +8,11 @@ import com.yossi.chesscraft.chess.Move;
 import com.yossi.chesscraft.chess.Piece;
 import com.yossi.chesscraft.registry.ModBlocks;
 import net.minecraft.client.renderer.SubmitNodeCollector;
+//#if mc>=26.1
+//$import net.minecraft.client.renderer.block.BlockModelRenderState;
+//$import net.minecraft.client.renderer.block.BlockModelResolver;
+//$import net.minecraft.client.renderer.block.model.BlockDisplayContext;
+//#endif
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
@@ -29,6 +34,9 @@ public class ChessBoardRenderer implements BlockEntityRenderer<ChessBoardBlockEn
 	public static class State extends BlockEntityRenderState {
 		int count;
 		final BlockState[] states = new BlockState[40];
+//#if mc>=26.1
+//$		final BlockModelRenderState[] models = new BlockModelRenderState[40];
+//#endif
 		final float[] x = new float[40];
 		final float[] y = new float[40];
 		final float[] z = new float[40];
@@ -38,7 +46,15 @@ public class ChessBoardRenderer implements BlockEntityRenderer<ChessBoardBlockEn
 
 	private static final BlockState[] PIECE_STATES = new BlockState[Piece.COUNT];
 
+//#if mc>=26.1
+//$	private static final BlockDisplayContext DISPLAY_CONTEXT = BlockDisplayContext.create();
+//$	private final BlockModelResolver blockModels;
+//#endif
+
 	public ChessBoardRenderer(BlockEntityRendererProvider.Context context) {
+//#if mc>=26.1
+//$		this.blockModels = context.blockModelResolver();
+//#endif
 	}
 
 	static BlockState pieceState(int piece) {
@@ -130,10 +146,14 @@ public class ChessBoardRenderer implements BlockEntityRenderer<ChessBoardBlockEn
 		return a + (b - a) * t;
 	}
 
-	private static void add(State st, int piece, float x, float y, float z, float scale) {
+	private void add(State st, int piece, float x, float y, float z, float scale) {
 		if (st.count >= st.states.length || piece < 0) return;
 		int i = st.count++;
 		st.states[i] = pieceState(piece);
+//#if mc>=26.1
+//$		if (st.models[i] == null) st.models[i] = new BlockModelRenderState();
+//$		blockModels.update(st.models[i], st.states[i], DISPLAY_CONTEXT);
+//#endif
 		st.x[i] = x;
 		st.y[i] = y;
 		st.z[i] = z;
@@ -144,7 +164,11 @@ public class ChessBoardRenderer implements BlockEntityRenderer<ChessBoardBlockEn
 	public void submit(State st, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera) {
 		pose.pushPose();
 		pose.translate(0.5f, 0, 0.5f);
+//#if mc>=26.3
+//$		pose.rotate(Axis.YP.rotationDegrees(-st.yaw));
+//#else
 		pose.mulPose(Axis.YP.rotationDegrees(-st.yaw));
+//#endif
 		pose.translate(-0.5f, 0, -0.5f);
 		for (int i = 0; i < st.count; i++) {
 			float s = PIECE_SCALE * st.scale[i];
@@ -152,7 +176,11 @@ public class ChessBoardRenderer implements BlockEntityRenderer<ChessBoardBlockEn
 			pose.translate(st.x[i] / 16f, (SURFACE_Y + st.y[i]) / 16f, st.z[i] / 16f);
 			pose.scale(s, s, s);
 			pose.translate(-0.5f, 0, -0.5f);
+//#if mc>=26.1
+//$			st.models[i].submit(pose, collector, st.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+//#else
 			collector.submitBlock(pose, st.states[i], st.lightCoords, OverlayTexture.NO_OVERLAY, 0);
+//#endif
 			pose.popPose();
 		}
 		pose.popPose();

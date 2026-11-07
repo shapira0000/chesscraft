@@ -1,0 +1,106 @@
+// Shared source layout for every loader/version port (applied from ports/<loader>/<version>/build.gradle).
+//
+// 1. Layers, highest priority first. A file in a higher layer replaces the file with the same relative
+//    path in the lower layers:
+//      ports/<loader>/<version>/src/main/{java,resources}   this port only
+//      ports/<loader>/glue/{java,resources}                 this loader (entry points, networking)
+//      versions/<v>/{java,resources}, one per chess_versions entry
+//      src/main + src/client                                the shared mod
+//    The Fabric glue in src/*/java/com/yossi/chesscraft/fabric is only used by Fabric ports.
+//
+// 2. Java files are preprocessed for the target Minecraft version and loader (see ports/preprocess.gradle):
+//      //#if mc>=26.1 && !fabric        conditions: mc <op> version, fabric, neoforge, forge, !, &&, ||
+//      //$ code for that version        lines of an inactive-in-1.21.11 branch start with //$
+//      //#elif ... / //#else / //#endif
+//    The shared source compiles as-is for Fabric 1.21.11 (the root project): there, every //$ line is a comment.
+//    Text renames for whole versions live in versions/<v>/renames.txt (regex => replacement).
+
+def repoDir = file('../../..')
+def loaderName = project.property('chess_loader') as String
+def mcVersion = project.property('minecraft_version') as String
+def versionLayers = ((project.findProperty('chess_versions') ?: '') as String).split(',').collect { it.trim() }.findAll { it }
+
+def javaLayers = [file('src/main/java'), new File(repoDir, "ports/${loaderName}/glue/java")]
+def resourceLayers = [file('src/main/resources'), new File(repoDir, "ports/${loaderName}/glue/resources")]
+versionLayers.each {
+	javaLayers << new File(repoDir, "versions/${it}/java")
+	resourceLayers << new File(repoDir, "versions/${it}/resources")
+}
+javaLayers << new File(repoDir, 'src/main/java') << new File(repoDir, 'src/client/java')
+// Development-only in-game check (gradlew runClient -Pchess_smoketest=true); never part of a release jar.
+def smoketest = (project.findProperty('chess_smoketest') ?: 'false') == 'true'
+if (smoketest) {
+	javaLayers << new File(repoDir, "ports/${loaderName}/smoketest/java") << new File(repoDir, 'src/smoketest/java')
+}
+resourceLayers << new File(repoDir, 'src/main/resources')
+
+def renameFiles = versionLayers.collect { new File(repoDir, "versions/${it}/renames.txt") }.findAll { it.isFile() }
+def sharedSrc = new File(repoDir, 'src')
+
+def genJava = layout.buildDirectory.dir('chess-src/java')
+def genResources = layout.buildDirectory.dir('chess-src/resources')
+
+def layeredCopy = { Copy task, List<File> layers, List<String> sharedExcludes ->
+	task.duplicatesStrategy = DuplicatesStrategy.EXCLUDE   // the first (highest) layer wins
+	layers.findAll { it.isDirectory() }.each { dir ->
+		def isShared = dir.toPath().startsWith(sharedSrc.toPath())
+		task.from(dir) {
+			if (isShared) sharedExcludes.each { exclude it }
+		}
+		task.inputs.dir(dir)
+	}
+}
+
+apply from: new File(repoDir, 'ports/preprocess.gradle')
+
+def prepareJava = tasks.register('prepareChessJava', Copy) {
+	layeredCopy(it, javaLayers, loaderName == 'fabric' ? [] : ['com/yossi/chesscraft/fabric/**'])
+	into genJava
+	renameFiles.each { inputs.file(it) }
+	inputs.property('mc', mcVersion)
+	inputs.property('loader', loaderName)
+	inputs.property('smoketest', smoketest)
+	doFirst { delete genJava }
+	doLast {
+		def rules = []
+		renameFiles.each { f ->
+			f.eachLine('UTF-8') { line ->
+				def t = line.trim()
+				if (!t || t.startsWith('#')) return
+				def parts = t.split(/\s+=>\s+/, 2)
+				rules << [java.util.regex.Pattern.compile(parts[0]), parts.length > 1 ? parts[1] : '']
+			}
+		}
+		genJava.get().asFile.eachFileRecurse(groovy.io.FileType.FILES) { f ->
+			if (!f.name.endsWith('.java')) return
+			def text = f.getText('UTF-8')
+			def out = chessPreprocess(text, mcVersion, loaderName, f.path)
+			rules.each { rule -> out = rule[0].matcher(out).replaceAll(rule[1]) }
+			if (out != text) f.setText(out, 'UTF-8')
+		}
+	}
+}
+
+def prepareResources = tasks.register('prepareChessResources', Copy) {
+	layeredCopy(it, resourceLayers, loaderName == 'fabric' ? [] : ['fabric.mod.json'])
+	into genResources
+	doFirst { delete genResources }
+}
+
+sourceSets.main.java.srcDirs = [genJava]
+sourceSets.main.resources.srcDirs = [genResources]
+tasks.named('compileJava') { dependsOn prepareJava }
+tasks.named('processResources') { dependsOn prepareResources }
+tasks.matching { it.name == 'sourcesJar' }.configureEach { dependsOn prepareJava, prepareResources }
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = 'UTF-8'
+	options.compilerArgs << '-Xmaxerrs' << '5000'
+}
+
+// The license travels with every jar.
+tasks.named('jar') {
+	from(new File(repoDir, 'LICENSE')) {
+		rename { 'LICENSE_chesscraft.txt' }
+	}
+}

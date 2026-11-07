@@ -31,13 +31,21 @@ import net.minecraft.world.phys.AABB;
  * board in survival and count the drops. Screenshots go to build/run/clientGameTest/screenshots.
  */
 public class ChessClientGameTest implements FabricClientGameTest {
+	/** Raw mouse button numbers (26.3 numbers them from 1, with right = 3). */
+//#if mc>=26.3
+//$	private static final int LEFT = 1;
+//$	private static final int RIGHT = 3;
+//#else
+	private static final int LEFT = 0;
+	private static final int RIGHT = 1;
+//#endif
 	private static final BlockPos BASE = new BlockPos(0, -60, 5);
 	private static final BlockPos BOARD = BASE.above();
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
 		try (TestSingleplayerContext sp = context.worldBuilder().create()) {
-			sp.getClientWorld().waitForChunksRender();
+			waitForChunks(sp);
 			TestServerContext server = sp.getServer();
 			server.runCommand("gamemode creative @a");
 			server.runCommand("time set noon");
@@ -51,7 +59,7 @@ public class ChessClientGameTest implements FabricClientGameTest {
 			context.waitTicks(10);
 			context.runOnClient(mc -> log("aim before place: " + mc.hitResult + " " + (mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult bh ? bh.getBlockPos() + " " + bh.getDirection() : "")
 					+ " hand=" + mc.player.getMainHandItem()));
-			context.getInput().pressMouse(1);
+			context.getInput().pressMouse(RIGHT);
 			context.waitTicks(5);
 			server.runOnServer(s -> log("after place: board=" + s.overworld().getBlockState(BOARD) + " base=" + s.overworld().getBlockState(BASE)
 					+ " hand=" + s.getPlayerList().getPlayers().get(0).getMainHandItem()));
@@ -71,11 +79,11 @@ public class ChessClientGameTest implements FabricClientGameTest {
 			server.runCommand("item replace entity @a weapon.mainhand with chesscraft:white_pawn 10");
 			server.runCommand("tp @a 0.5 -60 2.6 facing 0.5 -60.42 5.5");
 			context.waitTicks(5);
-			context.getInput().pressMouse(1);
+			context.getInput().pressMouse(RIGHT);
 			context.waitTicks(5);
 			check(stock(server, Piece.make(Piece.WHITE, Piece.PAWN)) == 8, "right-click should store 8 pawns");
 			check(server.computeOnServer(s -> s.getPlayerList().getPlayers().get(0).getMainHandItem().getCount()) == 2, "2 pawns should stay in hand");
-			context.getInput().pressMouse(1);
+			context.getInput().pressMouse(RIGHT);
 			context.waitTicks(5);
 			check(stock(server, Piece.make(Piece.WHITE, Piece.PAWN)) == 8, "cap must hold at 8");
 			check(server.computeOnServer(s -> s.overworld().getBlockState(BOARD.above()).isAir()), "no piece may be placed on the board");
@@ -92,35 +100,35 @@ public class ChessClientGameTest implements FabricClientGameTest {
 				for (int p = 0; p < Piece.COUNT; p++) be.addStock(p, 8);
 			});
 
-			context.runOnClient(mc -> mc.options.hideGui = true);
+			context.runOnClient(mc -> hideHud(mc, true));
 			server.runCommand("tp @a 0.5 -56.6 1.6 facing 0.5 -59.3 5.6");
 			context.waitTicks(20);
 			context.takeScreenshot("chess_01_empty_board");
 
 			// Open the screen with an empty hand.
-			context.runOnClient(mc -> mc.options.hideGui = false);
+			context.runOnClient(mc -> hideHud(mc, false));
 			server.runCommand("item replace entity @a weapon.mainhand with air");
 			server.runCommand("tp @a 0.5 -60 2.6 facing 0.5 -60.42 5.5");
 			context.waitTicks(5);
-			context.getInput().pressMouse(1);
+			context.getInput().pressMouse(RIGHT);
 			context.waitForScreen(ChessScreen.class);
 			log("screen opened by right-click");
 			context.waitTicks(5);
 			context.takeScreenshot("chess_02_setup_screen");
 			for (String page : new String[]{"BOT", "FRIEND", "TIME", "SETTINGS"}) {
-				context.runOnClient(mc -> ((ChessScreen) mc.screen).openPage(page));
+				context.runOnClient(mc -> ((ChessScreen) screen(mc)).openPage(page));
 				context.waitTicks(3);
 				context.takeScreenshot("chess_02_page_" + page.toLowerCase());
 			}
 			context.runOnClient(mc -> {
 				com.yossi.chesscraft.client.ClientChessSettings.get().timeTab = 1;
-				((ChessScreen) mc.screen).openPage("TIME");
+				((ChessScreen) screen(mc)).openPage("TIME");
 			});
 			context.waitTicks(3);
 			context.takeScreenshot("chess_02_page_time_increment");
 			context.runOnClient(mc -> {
 				com.yossi.chesscraft.client.ClientChessSettings.get().timeTab = 0;
-				((ChessScreen) mc.screen).openPage("HOME");
+				((ChessScreen) screen(mc)).openPage("HOME");
 			});
 			// Custom mode: five white queens are fine (virtual pieces).
 			server.runOnServer(s -> {
@@ -157,7 +165,7 @@ public class ChessClientGameTest implements FabricClientGameTest {
 			context.takeScreenshot("chess_04b_arrows");
 			drag(context, "a3", "a3", 0);
 			// Browse back to move 2, then continue the game from there (bot game with take-backs).
-			context.runOnClient(mc -> ((ChessScreen) mc.screen).testBrowse(2));
+			context.runOnClient(mc -> ((ChessScreen) screen(mc)).testBrowse(2));
 			context.waitTicks(3);
 			context.takeScreenshot("chess_04c_browse");
 			server.runOnServer(s -> act(s, ChessActionPayload.UNDO_TO, 2, 0, 0, ""));
@@ -169,7 +177,7 @@ public class ChessClientGameTest implements FabricClientGameTest {
 
 			// In-world views.
 			context.setScreen(() -> null);
-			context.runOnClient(mc -> mc.options.hideGui = true);
+			context.runOnClient(mc -> hideHud(mc, true));
 			server.runCommand("tp @a 0.5 -56.6 1.6 facing 0.5 -59.3 5.6");
 			context.waitTicks(20);
 			context.takeScreenshot("chess_05_world_from_white");
@@ -195,7 +203,7 @@ public class ChessClientGameTest implements FabricClientGameTest {
 
 			server.runOnServer(s -> act(s, ChessActionPayload.RESIGN, 0, 0, 0, ""));
 			server.runOnServer(s -> act(s, ChessActionPayload.NEW_GAME, 0, 0, 0, ""));
-			context.runOnClient(mc -> mc.options.hideGui = false);
+			context.runOnClient(mc -> hideHud(mc, false));
 			// Play a friend: after Start the board waits for a second player.
 			server.runOnServer(s -> act(s, ChessActionPayload.START, 0, 0, 0, "opp=FRIEND;color=0;base=600;inc=0"));
 			context.setScreen(() -> new ChessScreen(BOARD));
@@ -210,7 +218,7 @@ public class ChessClientGameTest implements FabricClientGameTest {
 			server.runCommand("gamemode survival @a");
 			server.runCommand("tp @a -0.5 -60 2.0 facing -0.5 -60.52 4.5");
 			context.waitTicks(5);
-			context.getInput().holdMouseFor(0, 60);
+			context.getInput().holdMouseFor(LEFT, 60);
 			context.waitTicks(20);
 			server.runOnServer(s -> {
 				ServerLevel level = s.overworld();
@@ -290,18 +298,18 @@ public class ChessClientGameTest implements FabricClientGameTest {
 		log("mate line: " + server.computeOnServer(s -> board(s).game().sanMoves()) + " -> " + result);
 		check(result.startsWith("FINISHED Checkmate"), "expected checkmate, got " + result);
 		context.waitTicks(5);
-		context.runOnClient(mc -> mc.options.hideGui = false);
+		context.runOnClient(mc -> hideHud(mc, false));
 		context.setScreen(() -> new ChessScreen(BOARD));
 		context.waitTicks(15);
 		context.takeScreenshot("chess_11_game_over");
 		context.setScreen(() -> null);
-		context.runOnClient(mc -> mc.options.hideGui = true);
+		context.runOnClient(mc -> hideHud(mc, true));
 		server.runCommand("gamemode spectator @a");
 		server.runCommand("tp @a 0.5 -57.6 2.6 facing 0.5 -60.7 5.4");
 		context.waitTicks(30);
 		context.takeScreenshot("chess_12_board_after_win");
 		server.runCommand("gamemode creative @a");
-		context.runOnClient(mc -> mc.options.hideGui = false);
+		context.runOnClient(mc -> hideHud(mc, false));
 		server.runOnServer(s -> act(s, ChessActionPayload.NEW_GAME, 0, 0, 0, ""));
 		server.runOnServer(s -> act(s, ChessActionPayload.SET_BOARD_MODE, 0, 0, 0, ""));
 		log("rules scenarios ok");
@@ -317,19 +325,19 @@ public class ChessClientGameTest implements FabricClientGameTest {
 			act(s, ChessActionPayload.RESIGN, 0, 0, 0, "");
 		});
 		check(server.computeOnServer(s -> board(s).phase()) == ChessBoardBlockEntity.Phase.FINISHED, "review game should be over");
-		context.runOnClient(mc -> mc.options.hideGui = false);
+		context.runOnClient(mc -> hideHud(mc, false));
 		context.setScreen(() -> new ChessScreen(BOARD));
 		context.waitTicks(10);
-		context.runOnClient(mc -> ((ChessScreen) mc.screen).testOpenReview());
+		context.runOnClient(mc -> ((ChessScreen) screen(mc)).testOpenReview());
 		context.waitTicks(4);
 		context.takeScreenshot("chess_13_review_analyzing");
-		context.waitFor(mc -> mc.screen instanceof ChessScreen cs && cs.testReviewReady(), 1200);
+		context.waitFor(mc -> screen(mc) instanceof ChessScreen cs && cs.testReviewReady(), 1200);
 		context.waitTicks(4);
 		context.takeScreenshot("chess_14_review_summary");
-		context.runOnClient(mc -> ((ChessScreen) mc.screen).testReviewMove(6));
+		context.runOnClient(mc -> ((ChessScreen) screen(mc)).testReviewMove(6));
 		context.waitTicks(15);
 		context.takeScreenshot("chess_15_review_blunder");
-		context.runOnClient(mc -> ((ChessScreen) mc.screen).testReviewMove(7));
+		context.runOnClient(mc -> ((ChessScreen) screen(mc)).testReviewMove(7));
 		context.waitTicks(15);
 		context.takeScreenshot("chess_16_review_best");
 		context.setScreen(() -> null);
@@ -355,9 +363,9 @@ public class ChessClientGameTest implements FabricClientGameTest {
 
 	private static void clickSquare(ClientGameTestContext context, String square) {
 		context.runOnClient(mc -> {
-			if (!(mc.screen instanceof ChessScreen screen)) throw new AssertionError("chess screen not open");
+			if (!(screen(mc) instanceof ChessScreen screen)) throw new AssertionError("chess screen not open");
 			int[] c = screen.squareCenter(sq(square));
-			MouseButtonEvent ev = new MouseButtonEvent(c[0], c[1], new MouseButtonInfo(0, 0));
+			MouseButtonEvent ev = new MouseButtonEvent(c[0], c[1], new MouseButtonInfo(LEFT, 0));
 			screen.mouseClicked(ev, false);
 			screen.mouseReleased(ev);
 		});
@@ -367,10 +375,10 @@ public class ChessClientGameTest implements FabricClientGameTest {
 	/** Press on one square and release on another with the given mouse button. */
 	private static void drag(ClientGameTestContext context, String from, String to, int button) {
 		context.runOnClient(mc -> {
-			ChessScreen screen = (ChessScreen) mc.screen;
+			ChessScreen screen = (ChessScreen) screen(mc);
 			int[] a = screen.squareCenter(sq(from)), b = screen.squareCenter(sq(to));
-			screen.mouseClicked(new MouseButtonEvent(a[0], a[1], new MouseButtonInfo(button, 0)), false);
-			screen.mouseReleased(new MouseButtonEvent(b[0], b[1], new MouseButtonInfo(button, 0)));
+			screen.mouseClicked(new MouseButtonEvent(a[0], a[1], new MouseButtonInfo(button == 1 ? RIGHT : LEFT, 0)), false);
+			screen.mouseReleased(new MouseButtonEvent(b[0], b[1], new MouseButtonInfo(button == 1 ? RIGHT : LEFT, 0)));
 		});
 		context.waitTicks(1);
 	}
@@ -416,5 +424,33 @@ public class ChessClientGameTest implements FabricClientGameTest {
 			level.setBlock(new BlockPos(3 + r * 2, -60, 22), ModBlocks.PIECES[Piece.make(Piece.WHITE, Piece.KNIGHT)].defaultBlockState()
 					.setValue(ChessPieceBlock.ROTATION, r * 4), Block.UPDATE_ALL);
 		}
+	}
+
+	// ------------------------------------------------------------------ version helpers
+
+	private static net.minecraft.client.gui.screens.@org.jspecify.annotations.Nullable Screen screen(Minecraft mc) {
+//#if mc>=26.2
+//$		return mc.gui.screen();
+//#else
+		return mc.screen;
+//#endif
+	}
+
+	private static void hideHud(Minecraft mc, boolean hidden) {
+//#if mc>=26.2
+//$		if (mc.gui.hud.isHidden() != hidden) mc.gui.hud.toggle();
+//#else
+		mc.options.hideGui = hidden;
+//#endif
+	}
+
+	private static void waitForChunks(TestSingleplayerContext sp) {
+//#if mc>=26.2
+//$		sp.getConnection().waitForChunksRender();
+//#elif mc>=26.1
+//$		sp.getClientLevel().waitForChunksRender();
+//#else
+		sp.getClientWorld().waitForChunksRender();
+//#endif
 	}
 }

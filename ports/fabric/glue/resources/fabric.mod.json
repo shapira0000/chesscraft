@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "chesscraft",
+	"version": "${version}",
+	"name": "ChessCraft",
+	"description": "A complete chess system: a table base, a 3x3 live chess board, twelve placeable chess pieces, full FIDE rules and a built-in chess engine from 100 to 3200 Elo.",
+	"authors": ["yossi"],
+	"contact": {
+		"sources": "https://github.com/shapira0000/chesscraft"
+	},
+	"license": ["CC0-1.0", "Apache-2.0 (Open Sans font only)"],
+	"icon": "assets/chesscraft/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["com.yossi.chesscraft.fabric.ChessCraftFabric"],
+		"client": ["com.yossi.chesscraft.fabric.ChessCraftFabricClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.18.0",
+		"minecraft": "${minecraft_range}",
+		"java": ">=${java_version}",
+		"fabric-api": "*"
+	}
+}

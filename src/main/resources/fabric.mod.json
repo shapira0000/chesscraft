@@ -9,8 +9,8 @@
 	"icon": "assets/chesscraft/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"main": ["com.yossi.chesscraft.ChessCraft"],
-		"client": ["com.yossi.chesscraft.client.ChessCraftClient"]
+		"main": ["com.yossi.chesscraft.fabric.ChessCraftFabric"],
+		"client": ["com.yossi.chesscraft.fabric.ChessCraftFabricClient"]
 	},
 	"depends": {
 		"fabricloader": ">=0.19.0",

@@ -2,13 +2,14 @@ package com.yossi.chesscraft.network;
 
 import com.yossi.chesscraft.ChessCraft;
 import com.yossi.chesscraft.block.entity.ChessBoardBlockEntity;
-import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.phys.Vec3;
+import java.util.function.Consumer;
 
 /** Client to server: one action on the board at {@code pos}. Arguments depend on the action. */
 public record ChessActionPayload(BlockPos pos, int action, int a, int b, int c, String text) implements CustomPacketPayload {
@@ -52,16 +53,22 @@ public record ChessActionPayload(BlockPos pos, int action, int a, int b, int c, 
 		return TYPE;
 	}
 
-	public static void registerServer() {
-		PayloadTypeRegistry.playC2S().register(TYPE, CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(TYPE, (payload, context) -> {
-			var player = context.player();
-			var level = player.level();
-			if (!level.isLoaded(payload.pos())) return;
-			if (player.distanceToSqr(payload.pos().getCenter()) > 12 * 12) return;
-			if (level.getBlockEntity(payload.pos()) instanceof ChessBoardBlockEntity be) {
-				be.handleAction(player, payload);
-			}
-		});
+	/** Sends a payload to the server; set by the loader's client entry point. */
+	public static Consumer<ChessActionPayload> clientSender = p -> {
+		throw new IllegalStateException("ChessCraft networking is not set up");
+	};
+
+	public static void sendToServer(ChessActionPayload payload) {
+		clientSender.accept(payload);
+	}
+
+	/** Server side: runs on the server thread for a payload received from {@code player}. */
+	public static void handle(ChessActionPayload payload, ServerPlayer player) {
+		var level = player.level();
+		if (!level.isLoaded(payload.pos())) return;
+		if (player.distanceToSqr(Vec3.atCenterOf(payload.pos())) > 12 * 12) return;
+		if (level.getBlockEntity(payload.pos()) instanceof ChessBoardBlockEntity be) {
+			be.handleAction(player, payload);
+		}
 	}
 }

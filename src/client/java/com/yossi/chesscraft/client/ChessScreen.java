@@ -1,5 +1,6 @@
 package com.yossi.chesscraft.client;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import static com.yossi.chesscraft.client.ui.ChessUi.*;
 
 import com.yossi.chesscraft.ChessCraft;
@@ -18,7 +19,6 @@ import com.yossi.chesscraft.network.ChessActionPayload;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -240,12 +240,26 @@ public class ChessScreen extends Screen {
 				+ "|" + (view != null && view.isOver()) + "|" + modalDismissed + "|" + reviewing + "|" + reviewMoves;
 	}
 
+	/** The mouse button in the 1.21 numbering used here: 0 left, 1 right, 2 middle (26.3 numbers them 1 left, 2 middle, 3 right). */
+	private static int button(MouseButtonEvent event) {
+//#if mc>=26.3
+//$		return switch (event.button()) {
+//$			case 1 -> 0;
+//$			case 3 -> 1;
+//$			case 2 -> 2;
+//$			default -> event.button();
+//$		};
+//#else
+		return event.button();
+//#endif
+	}
+
 	private void send(int action, int a, int b, int c) {
-		ClientPlayNetworking.send(new ChessActionPayload(pos, action, a, b, c));
+		ChessActionPayload.sendToServer(new ChessActionPayload(pos, action, a, b, c));
 	}
 
 	private void sendText(int action, String text) {
-		ClientPlayNetworking.send(new ChessActionPayload(pos, action, 0, 0, 0, text));
+		ChessActionPayload.sendToServer(new ChessActionPayload(pos, action, 0, 0, 0, text));
 	}
 
 	private void setPage(Page p) {
@@ -634,7 +648,7 @@ public class ChessScreen extends Screen {
 	private void copyPgn() {
 		if (be == null || view == null || minecraft == null) return;
 		minecraft.keyboardHandler.setClipboard(view.toPgn(be.seatLabel(Piece.WHITE), be.seatLabel(Piece.BLACK)));
-		if (minecraft.player != null) minecraft.player.displayClientMessage(Component.literal("PGN copied to clipboard."), true);
+		if (minecraft.player != null) ChessCraft.actionBar(minecraft.player, Component.literal("PGN copied to clipboard."));
 	}
 
 	@Override
@@ -1057,7 +1071,11 @@ public class ChessScreen extends Screen {
 	// =================================================================== rendering
 
 	@Override
+//#if mc>=26.1
+//$	public void extractRenderState(GuiGraphics g, int mx, int my, float pt) {
+//#else
 	public void render(GuiGraphics g, int mx, int my, float pt) {
+//#endif
 		mouseX = mx;
 		mouseY = my;
 		refreshState();
@@ -1566,7 +1584,7 @@ public class ChessScreen extends Screen {
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		refreshState();
 		double mx = event.x(), my = event.y();
-		int button = event.button();
+		int button = button(event);
 		if (be == null) return false;
 		if (promoFrom >= 0) {
 			handlePromotionClick(mx, my);
@@ -1759,7 +1777,7 @@ public class ChessScreen extends Screen {
 			pressed = null;
 			settings.save();
 		}
-		if (be != null && annoFrom >= 0 && event.button() == annoButton) {
+		if (be != null && annoFrom >= 0 && button(event) == annoButton) {
 			int s = squareAt(event.x(), event.y());
 			int from = annoFrom, btn = annoButton;
 			annoFrom = annoButton = -1;
@@ -1773,7 +1791,7 @@ public class ChessScreen extends Screen {
 				return true;
 			}
 		}
-		if (event.button() == 0 && leftPressSq >= 0) {
+		if (button(event) == 0 && leftPressSq >= 0) {
 			// A plain left click on the board clears the annotations.
 			if (squareAt(event.x(), event.y()) == leftPressSq) {
 				arrows.clear();
@@ -1835,16 +1853,16 @@ public class ChessScreen extends Screen {
 			setPage(Page.HOME);
 			return true;
 		}
-		if (!reviewing && be != null && be.phase() != Phase.SETUP && view != null && (event.key() == 262 || event.key() == 263)) {
+		if (!reviewing && be != null && be.phase() != Phase.SETUP && view != null && (event.key() == InputConstants.KEY_RIGHT || event.key() == InputConstants.KEY_LEFT)) {
 			int cur = browsing() ? browsePly : view.moves().size();
-			browse(cur + (event.key() == 262 ? 1 : -1));
+			browse(cur + (event.key() == InputConstants.KEY_RIGHT ? 1 : -1));
 			return true;
 		}
-		if (reviewing && reviewMoves && (event.key() == 262 || event.key() == 263)) {
-			setReviewPly(reviewPly + (event.key() == 262 ? 1 : -1));
+		if (reviewing && reviewMoves && (event.key() == InputConstants.KEY_RIGHT || event.key() == InputConstants.KEY_LEFT)) {
+			setReviewPly(reviewPly + (event.key() == InputConstants.KEY_RIGHT ? 1 : -1));
 			return true;
 		}
-		if (event.key() == 70 && be != null) {
+		if (event.key() == InputConstants.KEY_F && be != null) {
 			flip();
 			return true;
 		}

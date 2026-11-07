@@ -6,7 +6,7 @@ import com.yossi.chesscraft.ChessCraft;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
 
 /** Per-player chess preferences and last-used game options, saved in config/chesscraft-client.json. */
 public final class ClientChessSettings {
@@ -37,7 +37,7 @@ public final class ClientChessSettings {
 	}
 
 	private static Path file() {
-		return FabricLoader.getInstance().getConfigDir().resolve("chesscraft-client.json");
+		return Minecraft.getInstance().gameDirectory.toPath().resolve("config").resolve("chesscraft-client.json");
 	}
 
 	private static ClientChessSettings load() {
@@ -55,6 +55,7 @@ public final class ClientChessSettings {
 
 	public void save() {
 		try {
+			Files.createDirectories(file().getParent());
 			Files.writeString(file(), GSON.toJson(this));
 		} catch (IOException e) {
 			ChessCraft.LOGGER.warn("Could not save chess settings", e);

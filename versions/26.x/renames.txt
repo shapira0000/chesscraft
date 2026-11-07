@@ -1,0 +1,6 @@
+# Minecraft 26.x renames applied to the whole shared source (regex => replacement).
+net\.minecraft\.client\.gui\.GuiGraphics; => net.minecraft.client.gui.GuiGraphicsExtractor;
+\bGuiGraphics\b => GuiGraphicsExtractor
+\bg\.drawString\( => g.text(
+\bg\.renderOutline\( => g.outline(
+net\.minecraft\.client\.renderer\.state\.CameraRenderState => net.minecraft.client.renderer.state.level.CameraRenderState

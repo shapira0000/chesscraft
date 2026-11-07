@@ -1,6 +1,9 @@
 package com.yossi.chesscraft.block;
 
+//#if mc<26.3
 import com.mojang.serialization.MapCodec;
+//#endif
+import com.yossi.chesscraft.ChessCraft;
 import com.yossi.chesscraft.block.entity.ChessBoardBlockEntity;
 import com.yossi.chesscraft.registry.ModBlockEntities;
 import com.yossi.chesscraft.registry.ModBlocks;
@@ -46,7 +49,9 @@ import org.jspecify.annotations.Nullable;
  * Part index = (dx + 1) + (dz + 1) * 3 using world offsets from the centre.
  */
 public class ChessBoardBlock extends BaseEntityBlock {
+//#if mc<26.3
 	public static final MapCodec<ChessBoardBlock> CODEC = simpleCodec(ChessBoardBlock::new);
+//#endif
 	public static final EnumProperty<Direction> FACING = HorizontalDirectionalBlock.FACING;
 	public static final IntegerProperty PART = IntegerProperty.create("part", 0, 8);
 	public static final int CENTER = 4;
@@ -62,10 +67,12 @@ public class ChessBoardBlock extends BaseEntityBlock {
 		registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH).setValue(PART, CENTER));
 	}
 
+//#if mc<26.3
 	@Override
 	protected MapCodec<? extends BaseEntityBlock> codec() {
 		return CODEC;
 	}
+//#endif
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
@@ -87,7 +94,7 @@ public class ChessBoardBlock extends BaseEntityBlock {
 		BlockPos pos = ctx.getClickedPos();
 		if (!level.getBlockState(pos.below()).is(ModBlocks.TABLE_BASE)) {
 			if (level.isClientSide() && ctx.getPlayer() != null) {
-				ctx.getPlayer().displayClientMessage(Component.literal("Place the chess board on top of a Chess Table Base."), true);
+				ChessCraft.actionBar(ctx.getPlayer(), Component.literal("Place the chess board on top of a Chess Table Base."));
 			}
 			return null;
 		}
@@ -96,7 +103,7 @@ public class ChessBoardBlock extends BaseEntityBlock {
 			BlockPos p = partPos(pos, part);
 			if (!level.getBlockState(p).canBeReplaced(ctx) || !level.getWorldBorder().isWithinBounds(p)) {
 				if (level.isClientSide() && ctx.getPlayer() != null) {
-					ctx.getPlayer().displayClientMessage(Component.literal("The board needs a free 3x3 area."), true);
+					ChessCraft.actionBar(ctx.getPlayer(), Component.literal("The board needs a free 3x3 area."));
 				}
 				return null;
 			}

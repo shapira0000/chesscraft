@@ -1,0 +1,50 @@
+// Common build for the Forge ports (ForgeGradle 7). The port's build.gradle applies the plugin first.
+version = project.mod_version
+group = 'com.yossi.chesscraft'
+base {
+	archivesName = "chesscraft-forge-${project.chess_label}"
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(project.java_version as int)
+
+apply from: '../../sources.gradle'
+
+minecraft {
+	if (project.official_mappings == 'true') {
+		mappings channel: 'official', version: project.minecraft_version
+	}
+	runs {
+		configureEach {
+			workingDir = layout.projectDirectory.dir('run')
+		}
+		register('client') {
+			args '--username', 'ChessDev'
+			if ((project.findProperty('chess_smoketest') ?: 'false') == 'true') {
+				args '--quickPlaySingleplayer', 'ChessSmoke'
+			}
+		}
+		register('server') {
+			args '--nogui'
+		}
+	}
+}
+
+repositories {
+	minecraft.mavenizer(it)
+	maven fg.forgeMaven
+	maven fg.minecraftLibsMaven
+	mavenCentral()
+}
+
+dependencies {
+	implementation minecraft.dependency("net.minecraftforge:forge:${project.forge_version}")
+	annotationProcessor "net.minecraftforge:eventbus-validator:${project.eventbus_validator}"
+}
+
+processResources {
+	def props = [version: project.mod_version, minecraft_range: project.minecraft_range, loader_range: project.forge_loader_range]
+	inputs.properties props
+	filesMatching('META-INF/mods.toml') {
+		expand props
+	}
+}
